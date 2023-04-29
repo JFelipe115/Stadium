@@ -1,9 +1,72 @@
 ﻿@page "/"
 
-<PageTitle>Index</PageTitle>
+<h1>Control de Entrada al Estadio Atanasio Girardot</h1>
+@inject IRepository repository
+@inject SweetAlertService sweetAlertService
+@inject NavigationManager navigationManager
 
-<h1>Hello, world!</h1>
+<EditForm Model="ticketDTO" OnValidSubmit="ValidateAsync">
+    <DataAnnotationsValidator />
 
-Welcome to your new app.
+    <div class="form-group">
+        <label>ID Boleta:</label>
+        <InputNumber @bind-Value="@ticketDTO.Id" class="form-control" />
+        <ValidationMessage For="@(() => ticketDTO.Id)" />
+    </div>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    <div class="form-group">
+        <label>Porteria:</label>
+        <InputSelect @bind-Value="@ticketDTO.Entrance" class="form-control">
+            <option value="">Seleccione una porteria</option>
+            <option value="Norte">Norte</option>
+            <option value="Sur">Sur</option>
+            <option value="Oriental">Oriental</option>
+            <option value="Occidental">Occidental</option>
+        </InputSelect>
+        <ValidationMessage For="@(() => ticketDTO.Entrance)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Validar</button>
+</EditForm>
+
+@code{
+    private TicketDTO ticketDTO = new();
+    private Ticket? ticket;
+    string mensaje = "";
+
+    public void ValidateTicket()
+    {        
+        if (ticket == null)
+        {
+            mensaje = "Boleta no válida";
+        }
+        else if (ticket.WasUsed)
+        {
+            mensaje = $"Boleta usada el {ticket.DateUse} por la porteria {ticket.Entrance}";
+        }
+        else
+        {
+            ticket.WasUsed = true;
+            ticket.DateUse = DateTime.Now;
+            //ticket.Entrance = entrance;
+            mensaje = "Boleta validada correctamente";
+        }
+    }
+
+    private async Task ValidateAsync()
+    {
+        var responseHttp = await repository.Get<Ticket>($"/api/accounts/{ticketDTO.Id}");
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message, SweetAlertIcon.Error);
+            return;
+        }
+        ticket = responseHttp.Response;
+
+        if (ticket!.WasUsed)
+        {
+            mensaje = $"Boleta usada el {ticket.DateUse} por la porteria {ticket.Entrance}";
+        }
+    }
+}

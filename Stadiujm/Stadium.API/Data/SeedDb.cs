@@ -23,7 +23,7 @@ namespace Stadium.API.Data
             {
                 for (int i = 1; i <= 50000; i++)
                 {
-                    _context.Tickets.Add(new Ticket { Id = i, DateUse = null, WasUsed = false, Entrance = null });
+                    _context.Tickets.Add(new Ticket { DateUse = null, WasUsed = false, Entrance = null });
                 }
                 await _context.SaveChangesAsync();
             }
